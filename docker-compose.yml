@@ -1,0 +1,14 @@
+services:
+  app-radar-fixa:
+    image: radar-fixa
+    container_name: app-radar-fixa
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+
+  tunnel-fixa:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --url http://app-radar-fixa:8501
+    restart: unless-stopped
+    depends_on:
+      - app-radar-fixa

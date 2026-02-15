@@ -49,7 +49,9 @@ with c1:
     st.title("🏦 Terminal de Oportunidades RF")
     st.caption(f"Sincronizado via Banco Central & Tesouro Direto | {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}")
 with c2:
-    v_invest = st.number_input("Capital para Aporte (R$)", value=10000.0, step=1000.0)
+    st.markdown("<h4 style='color:#00ff88;'>Capital para Aporte (R$)</h4>", unsafe_allow_html=True)
+    v_invest = st.number_input("", value=10000.0, step=1000.0, label_visibility="collapsed")
+
 
 # --- DASHBOARD DE INDICADORES ---
 col1, col2, col3, col4 = st.columns(4)
@@ -63,7 +65,9 @@ with col3:
     clima = st.session_state.get('clima', 'BAIXA')
     st.metric("Clima de Mercado", "⚠️ ESTRESSE" if clima == "ALTA" else "✅ ESTÁVEL")
 with col4:
-    p_dias = st.selectbox("Prazo Desejado (Dias)", [180, 360, 720, 1080], index=1)
+    st.markdown("<h4 style='color:#00ff88;'>Prazo Desejado (Dias)</h4>", unsafe_allow_html=True)
+    p_dias = st.selectbox("", [180, 360, 720, 1080], index=1, label_visibility="collapsed")
+
 
 st.divider()
 

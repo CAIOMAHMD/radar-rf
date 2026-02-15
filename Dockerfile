@@ -5,12 +5,11 @@ FROM python:3.10-slim
 WORKDIR /app
 
 # Instala ferramentas básicas do sistema para evitar erros de rede
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    software-properties-common \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libxml2-dev \
+    libxslt-dev \
     && rm -rf /var/lib/apt/lists/*
-
 # Copia o arquivo de dependências primeiro (otimiza o cache do Docker)
 COPY requirements.txt .
 
