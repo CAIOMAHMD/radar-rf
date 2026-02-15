@@ -1,0 +1,17 @@
+# Manipulação e análise de dados
+pandas
+numpy
+
+# Coleta de dados (Web Scraping e APIs)
+requests
+beautifulsoup4
+lxml
+
+# Automação de Navegador (Opcional, caso os sites bloqueiem o requests)
+# selenium
+# webdriver-manager
+
+# Formatação e visualização no terminal (opcional, para o relatório ficar bonito)
+tabulate
+cloudscraper
+yfinance

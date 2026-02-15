@@ -51,6 +51,26 @@ class AnalisadorCredito:
             return "⚠️ ESPECULATIVO (High Yield / Low Quality)"
         
         return "⏳ AGUARDAR"
+    
+
+    def calcular_taxa_liquida(taxa, tipo_produto, prazo_dias):
+        """
+        Transforma a taxa bruta em líquida para comparação real.
+        """
+        if tipo_produto in ['LCI', 'LCA', 'CRI', 'CRA', 'Debenture Incentivada']:
+            return taxa # Isento de IR
+        
+        # Tabela regressiva de IR para CDB/LC/Tesouro
+        if prazo_dias <= 180:
+            ir = 0.225
+        elif prazo_dias <= 360:
+            ir = 0.20
+        elif prazo_dias <= 720:
+            ir = 0.175
+        else:
+            ir = 0.15
+            
+        return taxa * (1 - ir)
 
 # Testando o motor de busca
 if __name__ == "__main__":
