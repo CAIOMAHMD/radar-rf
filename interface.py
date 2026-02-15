@@ -11,10 +11,7 @@ st.set_page_config(page_title="Radar RF Terminal", page_icon="🏦", layout="wid
 # --- ESTILO CSS PROFISSIONAL (DARK MODE CUSTOM) ---
 st.markdown("""
     <style>
-    /* Fundo e Texto Geral */
     .stApp { background-color: #0e1117; color: #e0e0e0; }
-    
-    /* Metricas / Cards */
     [data-testid="stMetric"] {
         background-color: #1c202a;
         border: 1px solid #2d323e;
@@ -24,14 +21,7 @@ st.markdown("""
     }
     [data-testid="stMetricValue"] { color: #00ff88 !important; font-family: 'Courier New', monospace; }
     [data-testid="stMetricLabel"] { color: #808495 !important; font-size: 1rem; }
-
-    /* Inputs e Tabelas */
-    .stNumberInput, .stDataEditor {
-        background-color: #1c202a !important;
-        border-radius: 10px;
-    }
-
-    /* Botão Principal */
+    .stNumberInput, .stDataEditor { background-color: #1c202a !important; border-radius: 10px; }
     .stButton>button {
         background: linear-gradient(135deg, #00ff88 0%, #00bd68 100%);
         color: #0e1117 !important;
@@ -41,18 +31,12 @@ st.markdown("""
         border-radius: 10px;
         transition: all 0.3s ease;
     }
-    .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(0,255,136,0.3);
-    }
-
-    /* Divisores */
     hr { border: 0; height: 1px; background: linear-gradient(to right, #1c202a, #00ff88, #1c202a); }
     </style>
     """, unsafe_allow_html=True)
 
 # --- CARREGAMENTO DE DADOS ---
-@st.cache_data(ttl=3600) # Faz cache por 1 hora para não sobrecarregar a API
+@st.cache_data(ttl=3600)
 def carregar_dados():
     return br_api.buscar_dados_mercado()
 
@@ -112,7 +96,6 @@ if st.button("🚀 PROCESSAR ANÁLISE QUANTITATIVA", use_container_width=True):
     for _, row in df_editado.iterrows():
         if pd.isna(row['Ativo']): continue
         
-        # Lógica de Rentabilidade
         if "CDI" in str(row['Tipo']):
             t_anual = (row['Taxa %'] * mercado['selic'] / 100)
         elif row['Tipo'] == "PRE":
@@ -123,10 +106,11 @@ if st.button("🚀 PROCESSAR ANÁLISE QUANTITATIVA", use_container_width=True):
 
         isento = "ISENTO" in str(row['Tipo'])
         aliquota = 0 if isento else ir_v
-        v_liquido = v_invest * ((1 + (t_anual / 100)) ** (p_dias / 360))
-        v_liquido = v_liquido - ((v_liquido - v_invest) * aliquota)
         
-        # Inteligência Adicional
+        # CÁLCULO BRUTO E LÍQUIDO COM ARREDONDAMENTO
+        v_bruto = v_invest * ((1 + (t_anual / 100)) ** (p_dias / 360))
+        v_liquido = v_bruto - ((v_bruto - v_invest) * aliquota)
+        
         taxa_eq = motor_analista.calcular_taxa_equivalente(row['Taxa %'], row['Tipo'], p_dias)
         j_real = motor_analista.calcular_juro_real(t_anual, mercado['ipca_mensal'])
         veredito = motor_analista.calcular_status_ativo(row, mercado, clima)
@@ -135,8 +119,8 @@ if st.button("🚀 PROCESSAR ANÁLISE QUANTITATIVA", use_container_width=True):
             'Ativo': row['Ativo'],
             'Equiv. CDB': f"{taxa_eq}% CDI",
             'Juro Real': f"{j_real}%",
-            'Lucro (R$)': v_liquido - v_invest,
-            'Valor Final': v_liquido,
+            'Lucro (R$)': round(v_liquido - v_invest, 2), # ARREDONDADO
+            'Valor Final': round(v_liquido, 2),            # ARREDONDADO
             'Veredito': veredito
         })
 
@@ -147,6 +131,7 @@ if st.button("🚀 PROCESSAR ANÁLISE QUANTITATIVA", use_container_width=True):
     
     with res1:
         st.subheader("📊 Ranking de Rentabilidade Líquida")
+        # FORMATAÇÃO PARA MOSTRAR APENAS 2 CASAS DECIMAIS NA TABELA
         st.dataframe(
             df_res.style.format({'Lucro (R$)': 'R$ {:.2f}', 'Valor Final': 'R$ {:.2f}'})
             .highlight_max(subset=['Valor Final'], color='#004d2b'),
@@ -156,4 +141,15 @@ if st.button("🚀 PROCESSAR ANÁLISE QUANTITATIVA", use_container_width=True):
         st.subheader("🏆 Gráfico de Lucro Limpo")
         st.bar_chart(df_res.set_index('Ativo')['Lucro (R$)'])
 
-    st.success(f"Analise Finalizada: Imposto de Renda de {ir_v*100}% aplicado para o prazo de {p_dias} dias.")
+    st.success(f"Analise Finalizada: IR de {ir_v*100}% aplicado.")
+
+# --- SEÇÃO DE LEGENDA ---
+st.divider()
+with st.expander("📖 Guia Rápido: O que são esses ativos?"):
+    l1, l2, l3 = st.columns(3)
+    with l1:
+        st.markdown("### 🏢 Crédito Privado (CRA/CRI)\n* Isento de IR.\n* Risco de empresa (sem FGC).")
+    with l2:
+        st.markdown("### 🏦 Bancários (CDB/LCI/LCA)\n* LCI/LCA: Isento.\n* CDB: Tem IR.\n* Garantia FGC.")
+    with l3:
+        st.markdown("### 🏛️ Tesouro Direto\n* Selic: Reserva.\n* IPCA+: Proteção Inflação.\n* Pre: Taxa Fixa.")

@@ -11,26 +11,38 @@ def analisar_cenario(dados):
         return "⚖️ CENÁRIO ESTÁVEL: Diversificar entre Pós e Isentos."
 
 def calcular_status_ativo(ativo, mercado, volatilidade):
-    # Ajustando para ler as colunas da tabela da interface
     quality = ativo.get('Quality', 0)
     taxa = ativo.get('Taxa %', 0)
     tipo = ativo.get('Tipo', '')
-
-    if quality < 7:
-        return "❌ REJEITADO (Quality < 7)"
     
-    if volatilidade == "ALTA":
-        if taxa >= 115 or ("ISENTO" in tipo and taxa >= 92):
-            return "🔥 COMPRA NO ESTRESSE"
-            
-    if "ISENTO" in tipo and taxa >= 90:
-        return "🚀 EXCELENTE (Isento)"
-        
-    if "POS" in tipo and taxa >= 115:
-        return "🚀 EXCELENTE (Taxa)"
-        
-    return "✅ OK"
+    # 1. Filtro de Segurança (Seu critério salvo)
+    if quality < 7:
+        return "❌ REJEITADO (Risco Alto)"
+    
+    # 2. Lógica de Isentos (CRA/CRI/LCI/LCA)
+    if "ISENTO" in tipo:
+        if taxa >= 95: return "🚀 EXCELENTE (Prêmio Alto)"
+        if taxa >= 90: return "🔥 FORTE COMPRA"
+        return "✅ OK (Isento)"
 
+    # 3. Lógica de Pós-Fixados (CDB)
+    if "POS" in tipo:
+        if taxa >= 115: return "🚀 EXCELENTE (Taxa Rara)"
+        if taxa >= 110: return "✅ COMPRA (Acima da Média)"
+        if quality == 10 and taxa >= 100: return "🛡️ RESERVA (Seguro)"
+        return "🕒 MONITORAR"
+
+    # 4. Lógica de Inflação e Prefixados (Marcação a Mercado)
+    if tipo == "IPCA_MAIS":
+        if taxa >= 6.0: return "💎 PROTEÇÃO PREMIUM"
+        return "⚖️ ESTRATÉGICO"
+        
+    if tipo == "PRE":
+        if volatilidade == "ALTA": return "⚠️ RISCO PRE (Evitar)"
+        if taxa >= 13.0: return "🎯 OPORTUNIDADE PRE"
+        return "✅ OK (Pre)"
+
+    return "✅ OK"
 # Mantendo suas outras funções
 def calcular_juro_real(taxa_nominal, ipca_mensal):
     ipca_anual = (1 + (ipca_mensal/100))**12 - 1
